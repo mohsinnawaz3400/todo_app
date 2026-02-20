@@ -1,4 +1,5 @@
-// server.js
+// server.js - Vercel ke liye complete fix
+
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -11,17 +12,28 @@ import todoRoutes from "./routes/todoRoutes.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Connect to database
-connectDB();
+// CORS
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+
+// Connect DB
+connectDB();
+
+// Debug: Log all requests
+app.use((req, res, next) => {
+    console.log(`[${req.method}] ${req.path}`);
+    next();
+});
 
 // Health check
 app.get("/", (req, res) => {
@@ -32,13 +44,18 @@ app.get("/", (req, res) => {
     });
 });
 
-// API Routes
+// API Routes - IMPORTANT: Yeh sahi hona chahiye
 app.use("/api/users", userRoutes);
 app.use("/api/todos", todoRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-    res.status(404).json({ success: false, message: "Route not found" });
+    res.status(404).json({
+        success: false,
+        message: "Route not found",
+        path: req.path,
+        method: req.method
+    });
 });
 
 // Error Handler
@@ -50,9 +67,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-// app.listen(PORT, () => {
-//     console.log(`✅ Server is running on port ${PORT}`);
-//     console.log(`📚 API Documentation: http://localhost:${PORT}/`);
-// });
+// Local development
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+    });
+}
 
 export default app;

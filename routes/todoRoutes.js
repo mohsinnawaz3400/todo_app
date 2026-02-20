@@ -9,7 +9,7 @@ import {
     deleteTodo,
     deleteMultipleTodos,
     getDashboardStats
-} from "../controller/todoController.js";
+} from "../controllers/todoController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
